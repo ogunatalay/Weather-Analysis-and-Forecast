@@ -1,0 +1,132 @@
+import time
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import accuracy_score, classification_report, f1_score
+from sklearn.preprocessing import LabelEncoder
+
+# Veri setini oku
+df = pd.read_csv('seattle-weather.csv')
+
+# Veri seti hakkında genel bilgileri yazdır
+print(df.info())
+print(df.describe())
+
+# Eksik değerleri kontrol et
+print(df.isna().sum())
+
+# Tekrar eden satırları kontrol et
+print(df.duplicated().sum())
+
+# En düşük minimum sıcaklığa sahip olan günleri göster
+print(df[df['temp_min'] == min(df.temp_min)])
+
+# En yüksek maksimum sıcaklığa sahip olan günleri göster
+print(df[df['temp_max'] == max(df.temp_max)])
+
+# Sıcaklık dağılımlarını göster
+plt.figure(figsize=(12, 6))
+sns.histplot(data=df, x=df.temp_max, bins=20)
+plt.figure(figsize=(12, 6))
+sns.histplot(data=df, x=df.temp_min, bins=20)
+
+# Tarih sütununu datetime formatına çevir ve yıl, ay sütunlarını oluştur
+df['date'] = pd.to_datetime(df['date'])
+df['year'] = df['date'].dt.year
+df['month'] = df['date'].dt.month
+
+# Maksimum sıcaklık değişimi
+g = sns.FacetGrid(df, col='year', col_wrap=4, height=4)
+g.map(sns.lineplot, 'month', 'temp_max')
+g.set_axis_labels('Ay', 'Maksimum Sıcaklık (°C)')
+g.set_titles(col_template="{col_name}")
+plt.show()
+
+# Minimum sıcaklık değişimi
+g = sns.FacetGrid(df, col='year', col_wrap=4, height=4)
+g.map(sns.lineplot, 'month', 'temp_min')
+g.set_axis_labels('Ay', 'Minimum Sıcaklık (°C)')
+g.set_titles(col_template="{col_name}")
+plt.show()
+
+# Yağış miktarı değişimi
+g = sns.FacetGrid(df, col='year', col_wrap=4, height=4)
+g.map(sns.scatterplot, 'month', 'precipitation')
+g.set_axis_labels('Ay', 'Yağış Miktarı')
+g.set_titles(col_template="{col_name}")
+plt.show()
+
+# Rüzgar hızı değişimi
+g = sns.FacetGrid(df, col='year', col_wrap=4, height=5)
+g.map(sns.scatterplot, 'month', 'wind')
+g.set_axis_labels('Ay', 'Rüzgar Hızı')
+g.set_titles(col_template="{col_name}")
+plt.show()
+
+# Hava durumu türlerinin dağılımı
+plt.figure(figsize=(8, 6))
+sns.countplot(data=df, x=df.weather)
+x = df.weather.value_counts()
+plt.figure(figsize=(12, 10))
+plt.pie(x, labels=x.index, autopct='%1.1f%%', startangle=90,
+        colors=['lightblue', 'gold', 'lightgray', 'lightgreen', 'lightcoral'])
+plt.title('Hava Durumu Türlerinin Dağılımı')
+plt.show()
+
+# Gereksiz kolonları düşürme
+df.drop(['month', 'year'], axis=1, inplace=True)
+
+# Hava durumu etiketlerini sayısal değerlere dönüştürme
+le = LabelEncoder()
+df['weather'] = le.fit_transform(df['weather'])
+
+# Bağımsız ve bağımlı değişkenleri tanımlama
+X = df[['temp_min', 'temp_max', 'precipitation', 'wind']]
+y = df['weather']
+
+# Veriyi eğitim ve test setlerine ayırma
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Modelleme
+models = {
+    'LogisticRegression': LogisticRegression(),
+    'RandomForestClassifier': RandomForestClassifier(),
+    'GradientBoostingClassifier': GradientBoostingClassifier(),
+    'KNeighborsClassifier': KNeighborsClassifier(),
+    'SVC': SVC(),
+    'DecisionTreeClassifier': DecisionTreeClassifier()
+}
+
+# Doğruluk ve F1 skorlarını tutacak bir DataFrame oluşturalım
+results_df = pd.DataFrame(columns=['Model', 'Cross-Validation Accuracy', 'F1 Score'])
+
+# Modelleme ve çapraz doğrulama
+for model_name, model in models.items():
+    # Modeli eğitmek ve çapraz doğrulama yapmak için tek bir adımda kullanabiliriz
+    scores = cross_val_score(model, X, y, cv=10)  # cv=10 ile 10 kat çapraz doğrulama yapılır
+    accuracy_mean = scores.mean()  # Çapraz doğrulama skorlarının ortalaması doğruluk olarak kabul edilir
+
+    # F1 skoru hesaplamak için modeli eğitip test etmek gerekir
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    f1 = f1_score(y_test, y_pred, average='weighted')  # F1 skorunu weighted olarak hesaplayalım
+
+    # Sonuçları DataFrame'e ekleyelim
+    results_df = results_df.append({'Model': model_name,
+                                    'Cross-Validation Accuracy': accuracy_mean,
+                                    'F1 Score': f1},
+                                   ignore_index=True)
+
+# Sonuçları doğruluk değerine göre sıralayalım
+results_df = results_df.sort_values(by='Cross-Validation Accuracy', ascending=False)
+
+# Sonuçları ekrana yazdıralım
+print(results_df)
