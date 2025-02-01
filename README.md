@@ -3,11 +3,12 @@ Seattle Hava Durumu Analizi ve Hava Durumu Tahmini Projesi <br>
 🎯 Projenin Amacı:<br>
 Bu projede, Seattle şehrine ait hava durumu verilerini analiz etmek ve makine öğrenmesi modelleri kullanarak hava durumu türlerini tahmin etmek amaçlanmıştır. Proje kapsamında veri analizi, veri görselleştirme ve çeşitli makine öğrenmesi algoritmalarının performans karşılaştırması yapılmıştır.
 
-📁 1. Veri Seti İncelemesi ve Ön İşleme <br>
+📁 **1. Veri Seti İncelemesi ve Ön İşleme** <br>
+
 📊 a. Veri Seti Hakkında Genel Bilgi<br>
-I. Dosya: seattle-weather.csv
-II. Değişkenler:
--date: Tarih bilgisi
+I. Dosya: seattle-weather.csv<br>
+II. Değişkenler:<br>
+- date: Tarih bilgisi
 - temp_min: Minimum sıcaklık
 - temp_max: Maksimum sıcaklık
 - precipitation: Yağış miktarı
@@ -44,7 +45,7 @@ Veri seti eğitim ve test setleri olarak ayrıldı:<br>
 Eğitim Seti: %80<br>
 Test Seti: %20<br>
 
-🛠️ **4. Uygulanan Makine Öğrenmesi Modelleri**
+🛠️ **4. Uygulanan Makine Öğrenmesi Modelleri**<br>
 Aşağıdaki algoritmalar hava durumu tahmini için kullanıldı:<br>
 
 - Logistic Regression: Basit ve yorumlanabilir bir model.<br>
